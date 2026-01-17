@@ -7,6 +7,13 @@ title: How to add a Search Engine
 To add a new search engine, you need to define an implementation that adheres to the `SearchEngine` interface. Here is the structure of the interface:
 
 ```ts
+export interface MountContainer {
+  container: HTMLElement
+  renderRoot: HTMLElement
+}
+
+export type GetRenderRoot = () => MountContainer
+
 export interface SearchEngine {
   /**
    * Unique identifier of the search engine.
@@ -24,12 +31,12 @@ export interface SearchEngine {
   name: string
 
   /**
-   * URLs that this search engine can handle and default eanbled URLs.
+   * URLs that this search engine can handle and are enabled by default.
    */
   matches: string[]
 
   /**
-   * Optional URLs that can be enabled by users, but are not default-activated.
+   * Optional URLs that can be enabled by users, but are not enabled by default.
    */
   optionalMatches?: string[]
 
@@ -46,9 +53,9 @@ export interface SearchEngine {
 
   /**
    * A function that returns the root element where bookmarks will be rendered.
-   * @returns The root DOM element.
+   * @returns The container and render root elements.
    */
-  getRenderRoot: () => HTMLElement
+  getRenderRoot: GetRenderRoot
 }
 ```
 
@@ -60,7 +67,7 @@ Define Your Search Engine: Create an object that conforms to the `SearchEngine` 
 
 ```ts
 import invariant from 'tiny-invariant'
-import { createMountContainer } from '../mount-container'
+import { defineRenderRoot } from '../mount-container'
 import { $ } from '../utils'
 import { fromUrlQuery } from './utils/get-query'
 import type { SearchEngine } from './utils/types'
@@ -75,13 +82,11 @@ export const mySearchEngine: SearchEngine = {
   optionalMatches: [MY_SEARCH_ENGINE_URL], // Customize as needed
   allowUserSites: true, // Set to `true` if your service allows user sites. Like SearXNG
   getQuery: fromUrlQuery('q'), // This extracts the query from URL parameters. Adjust based on your requirement.
-  getRenderRoot: () => {
-    const { container, renderRoot } = createMountContainer()
+  getRenderRoot: defineRenderRoot((container) => {
     const searchContainer = $('#myRootElement') // Replace 'myRootElement' with an appropriate selector
     invariant(searchContainer, 'Injection point not found.')
     searchContainer.prepend(container)
-    return renderRoot
-  },
+  }),
 }
 ```
 
